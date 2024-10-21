@@ -17,7 +17,7 @@ phases:
   post_build:
     commands:
       - echo Build completed on `date`
-
+      - aws s3 sync . s3://challengeproject --delete
 artifacts:
   files:
     - '**/*'
