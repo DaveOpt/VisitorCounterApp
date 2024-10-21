@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.x  # Make sure this matches your Lambda runtime
+  pre_build:
+    commands:
+      - echo Installing source dependencies...
+      # Uncomment and adjust the following line if you have dependencies:
+      # - pip install -r requirements.txt -t .
+  build:
+    commands:
+      - echo Build started on `date`
+      - zip function.zip lambda_function.py # Adjust the Python file name if different
+      - aws lambda update-function-code --function-name UpdateVisitorCount --zip-file fileb://function.zip
+  post_build:
+    commands:
+      - echo Build completed on `date`
+
+artifacts:
+  files:
+    - '**/*'
+  # Adjust base-directory if your static files are in a different folder:
+  base-directory: 'path/to/your/static/files'
