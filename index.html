@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume - David Vilardo</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>David Vilardo</h1>
+            <p>www.linkedin.com/in/vilardo</p>
+            <p>122 Galahad Road, Greeley, PA 18425</p>
+            <p>(267) 275-4822 | contactdavesoon@gmail.com</p>
+        </header>
+
+        <section>
+            <h2>Career Summary</h2>
+            <p>Senior Information Technology Professional with over 15 years of experience in network engineering, system design, and project management within large, complex environments. Recognized for a strong ability to analyze challenges, implement innovative systems, and consistently deliver optimal results. Demonstrates proven strengths in problem-solving, effective communication, and leadership. Expertise includes enhancing functionality, driving efficiency, and developing strategic solutions.</p>
+        </section>
+
+        <section>
+            <h2>Professional Experience</h2>
+            <h3>General Electric, Boston, MA (2002 – 2018)</h3>
+            <h4>Network Build Lead, Trevose, PA (2012 - 2018)</h4>
+            <ul>
+                <li>Led the complex network integration and migration of a newly acquired company into the parent organization, navigating a challenging environment with resistance from the acquisition target. Successfully facilitated a seamless transition, resulting in a $500 revenue increase.</li>
+                <li>Negotiated with subsidiary leadership to address performance issues at 13 critical sites, eliminating unnecessary trouble tickets, and securing approval for essential upgrades, mitigating millions in financial risk for the business.</li>
+                <li>Mitigated a potential $480M revenue loss by swiftly addressing project risks and restoring business confidence. Resolved team conflicts by reassigning a combative engineer and bringing in additional support, ensuring the timely completion of a critical income-generating project.</li>
+                <li>Saved $600k annually by identifying and integrating rogue third-party connections into the proper gateway. Engaged with internal stakeholders to take ownership of the connections, leading to significant cost reductions in hardware and circuit expenses.</li>
+                <li>Mitigated significant security risks by leading a company-wide project to standardize internet-facing ACLs. Secured approval for additional resources and successfully implemented a unified approach, enhancing security and mitigating millions in potential losses.</li>
+                <li>Saved millions annually by designing and implementing a project SLA tracking dashboard accessible to all stakeholders, improving transparency, enhancing relationships with subsidiaries, and ensuring project deadlines were met. The initiative helped prevent subsidiaries from reclaiming network management, preserving cost efficiencies for the organization.</li>
+                <li>Averted millions in potential financial and reputation losses by redesigning the C-Level video network to enhance resiliency.</li>
+                <li>Mentored a team member through a challenging acquisition integration, enabling them to successfully generate $50k per day in new business revenue.</li>
+                
+                
+            
+            <p>Led meetings with subsidiary business leaders to propose, evaluate, and approve projects, ensuring alignment with business goals. Assessed and authorized additional contractor hours based on project requirements. Mediated project conflicts by delivering strategic solutions and served as the primary escalation point for issues raised by business units or team members. Led large projects from start to finish.</p>
+            
+            </ul>
+
+            <h4>Network Engineer, Princeton, NJ (2007 – 2012)</h4>
+            <ul>
+                <li>Designed and implemented cost-effective, scalable, and resilient network solutions for business subsidiaries, encompassing quotes, order management, customer communication, configuration, testing, backout procedures, and documentation for acquisitions, divestitures, third parties, and branch offices.</li>
+                <li>Acted as a fourth-level escalation point for Network Operations, leading problem identification and resolution efforts.</li>
+                <li>Routinely performed BGP core routing updates and implemented backbone and peering policies to optimize network performance.</li>
+            </ul>
+
+            <h4>Implementation Consultant, Princeton, NJ (2002 – 2006)</h4>
+            <ul>
+                <li>Developed cost-effective, scalable, and resilient network solutions and implementations for all business subsidiary branch sites, including entire new site builds, additions, and upgrades.</li>
+                <li>Created site diagrams and documentation, and served as level 3 escalation for network operations troubleshooting and problem resolution.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Prudential Securities/Insurance, Newark, NJ (2000 – 2002)</h3>
+            <h4>Telecom Engineering Associate, Roseland, NJ</h4>
+            <ul>
+                <li>Managed NOC operations for a global LAN/WAN environment supporting 60,000 users, overseeing network management and troubleshooting.</li>
+                <li>Configured IP and VLAN routing, collaborating with NOC problem managers and vendors to ensure timely issue resolution and SLA compliance.</li>
+                <li>Conducted circuit utilization analysis for capacity planning and addressed slow response issues.</li>
+                <li>Performed site certifications for newly provisioned locations, ensuring network redundancy and effective diagnostic tool integration.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h3>Empire Technologies, Freehold, NJ (1998 – 2000)</h3>
+            <h4>Telecommunications Technician</h4>
+            <ul>
+                <li>In-house lab creation of network diagrams for incoming RFPs, installation, and testing of CAT3/CAT5 cable.</li>
+                <li>Provided hardware/software desktop support for business employees.</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Education</h2>
+            <p>New York Institute of Technology - Bachelor of Science Degree, Interdisciplinary Studies.</p>
+                <li>Majors: Telecommunications Management, Business.</li>
+            <p>University of Nicosia - Masters of Science Degree in Digital Currency</p>
+        </section>
+
+        <section>
+            <h2>Certifications</h2>
+            <p>AWS Certified Solutions Architect Associate SAA-C03</p>
+        </section>
+    </div>
+
+    <!-- JavaScript to update the visitor count -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('https://h3cmattpz4.execute-api.us-east-1.amazonaws.com/Prod/UpdateVisitorCount', {method: 'POST'})
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('visitorCount').textContent = data.visitor_count;
+            })
+            .catch(error => console.error('Error fetching visitor count:', error));
+        });
+        </script>
+</body>
+</html>
