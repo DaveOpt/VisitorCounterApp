@@ -22,4 +22,4 @@ artifacts:
   files:
     - '**/*'
   # Adjust base-directory if your static files are in a different folder:
-  base-directory: 'path/to/your/static/files'
+  base-directory: '.'
