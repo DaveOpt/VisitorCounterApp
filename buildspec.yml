@@ -1,12 +1,6 @@
 version: 0.2
 
 phases:
-  build:
-    commands:
-      - echo "Install python dependencies"
-      - python -m pip install --upgrade pip
-      - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-
   post_build:
     commands:
       - echo "Syncing files to S3"
