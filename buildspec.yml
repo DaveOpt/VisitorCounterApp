@@ -1,25 +1,11 @@
 version: 0.2
 
 phases:
-  install:
-    runtime-versions:
-      python: 3.x  # Make sure this matches your Lambda runtime
-  pre_build:
-    commands:
-      - echo No external dependencies to install.
-      # Uncomment and adjust the following line if you have dependencies:
-      # - pip install -r requirements.txt -t .
-  build:
-    commands:
-      - echo Build started on `date`
-      # No need to zip if Lambda is written directly in the console
-      - aws lambda update-function-code --function-name UpdateVisitorCount --zip-file fileb://function.zip
   post_build:
     commands:
       - echo Build completed on `date`
       - aws s3 sync . s3://challengeproject --delete
+
 artifacts:
   files:
     - '**/*'
-  # Adjust base-directory if your static files are in a different folder:
-  base-directory: '.'
