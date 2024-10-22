@@ -1,11 +1,18 @@
 version: 0.2
 
 phases:
+  build:
+    commands:
+      - echo "Install python dependencies"
+      - python -m pip install --upgrade pip
+      - if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
   post_build:
     commands:
-      - echo Build completed on `date`
-      - aws s3 sync . s3://challengeproject --delete --dryrun
+      - echo "Syncing files to S3"
+      - aws s3 sync . s3://challengeproject --delete
 
 artifacts:
   files:
     - '**/*'
+  base-directory: '.'
