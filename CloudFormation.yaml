@@ -1,0 +1,260 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for Visitor Counter Project'
+
+
+Parameters:
+  DomainName:
+    Type: String
+    Description: Domain name for the website (e.g., cloudcostopt.com)
+  
+  GitHubRepoName: 
+    Type: String
+    Description: GitHub repository name
+    
+  GitHubBranch:
+    Type: String
+    Description: GitHub branch name
+    Default: main
+    
+  CodeStarConnectionArn:
+    Type: String  
+    Description: ARN of the CodeStar connection for GitHub
+        
+  CertificateArn:
+    Type: String
+    Description: ARN of the ACM certificate for the domain
+
+Resources:
+  # S3 Resources
+  WebsiteBucket:
+    Type: AWS::S3::Bucket 
+    Properties:
+      BucketName: challengeproject
+      WebsiteConfiguration:
+        IndexDocument: index.html
+      PublicAccessBlockConfiguration:  
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false  
+        RestrictPublicBuckets: false
+
+  WebsiteBucketPolicy:   
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      PolicyDocument:
+        Version: '2012-10-17' 
+        Statement:
+          - Effect: Allow
+            Principal: '*'  
+            Action: 's3:GetObject'
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref WebsiteBucket, '/*']]
+
+  # DynamoDB Table
+  VisitorCountTable: 
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: VisitorCount
+      BillingMode: PAY_PER_REQUEST 
+      AttributeDefinitions:
+        - AttributeName: visitorID
+          AttributeType: S 
+      KeySchema:
+        - AttributeName: visitorID
+          KeyType: HASH
+      TableClass: STANDARD
+      DeletionProtectionEnabled: false
+
+  # IAM Role for Lambda
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      RoleName: !Sub UpdateVisitorCount-role-${AWS::StackName}
+      Path: /service-role/
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow 
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: DynamoDBAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:UpdateItem
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                Resource: !GetAtt VisitorCountTable.Arn
+
+  # Lambda Function
+  UpdateVisitorCountFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: 
+      - LambdaExecutionRole
+      - VisitorCountTable
+    Properties:
+      FunctionName: UpdateVisitorCount
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.12
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+          import logging
+          
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+          
+          dynamodb = boto3.resource('dynamodb')
+          table = dynamodb.Table('VisitorCount')
+          
+          def lambda_handler(event, context):
+              logger.info('Function started, attempting to update visitor count.')
+              try:
+                  response = table.update_item(
+                      Key={'visitorID': 'total_visits'},
+                      UpdateExpression="set #count = if_not_exists(#count, :start) + :inc",
+                      ExpressionAttributeNames={'#count': 'count'},
+                      ExpressionAttributeValues={':inc': 1, ':start': 0},
+                      ReturnValues="UPDATED_NEW"
+                  )
+                  
+                  current_count = int(response['Attributes']['count'])
+                  logger.info(f'Updated count to: {current_count}')
+                  
+                  return {
+                      'statusCode': 200,
+                      'body': json.dumps({'visitor_count': current_count}),
+                      'headers': {
+                          'Access-Control-Allow-Origin': '*',
+                          'Content-Type': 'application/json'
+                      }
+                  }
+              except Exception as e:
+                  logger.error(f'Failed to update visitor count: {e}')
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps({'error': str(e)}),
+                      'headers': {
+                          'Access-Control-Allow-Origin': '*',
+                          'Content-Type': 'application/json'
+                      }
+                  }
+
+  # Lambda Permission for API Gateway
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    DependsOn: UpdateVisitorCountFunction
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref UpdateVisitorCountFunction
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${VisitorAPI}/*
+
+  # API Gateway
+  VisitorAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: ResumeToDynamoDB
+      Description: API for updating visitor counter
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  APIResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref VisitorAPI
+      ParentId: !GetAtt VisitorAPI.RootResourceId
+      PathPart: UpdateVisitorCount
+
+  APIMethod:
+    Type: AWS::ApiGateway::Method
+    DependsOn: LambdaInvokePermission
+    Properties:
+      RestApiId: !Ref VisitorAPI
+      ResourceId: !Ref APIResource
+      HttpMethod: POST
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${UpdateVisitorCountFunction.Arn}/invocations
+
+  APIDeployment:
+    Type: AWS::ApiGateway::Deployment
+    DependsOn: APIMethod
+    Properties:
+      RestApiId: !Ref VisitorAPI
+      Description: Production deployment
+
+  APIStage:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      DeploymentId: !Ref APIDeployment
+      RestApiId: !Ref VisitorAPI
+      StageName: Prod
+
+  # CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    DependsOn:
+      - WebsiteBucket
+      - APIStage
+    Properties:
+      DistributionConfig:
+        Aliases:
+          - !Ref DomainName
+        Origins:
+          - Id: S3Origin
+            DomainName: !Select [1, !Split ["//", !GetAtt WebsiteBucket.WebsiteURL]]
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: http-only
+          - Id: APIOrigin
+            DomainName: !Sub ${VisitorAPI}.execute-api.${AWS::Region}.amazonaws.com
+            OriginPath: /Prod
+            CustomOriginConfig:
+              HTTPPort: 80
+              HTTPSPort: 443
+              OriginProtocolPolicy: https-only
+        Enabled: true
+        DefaultRootObject: index.html
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+        ViewerCertificate:
+          AcmCertificateArn: !Ref CertificateArn
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+
+Outputs:
+  CloudFrontDomainName:
+    Description: CloudFront Distribution Domain Name
+    Value: !GetAtt CloudFrontDistribution.DomainName
+
+  APIEndpoint:
+    Description: API Gateway Endpoint URL
+    Value: !Sub https://${VisitorAPI}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+
+  WebsiteBucketName:
+    Description: Name of S3 bucket to hold website content
+    Value: !Ref WebsiteBucket
